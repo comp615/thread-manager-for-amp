@@ -12,6 +12,8 @@ import {
   listPermissions,
   getSettingsPath,
   getAmpHelp,
+  getUsage,
+  getAmpVersion,
 } from '../lib/skills.js';
 
 interface SkillAddBody {
@@ -140,6 +142,24 @@ export async function handleSkillRoutes(
   if (pathname === '/api/amp-help') {
     try {
       const result = await getAmpHelp();
+      return jsonResponse(res, result);
+    } catch (err) {
+      return sendError(res, 500, (err as Error).message);
+    }
+  }
+
+  if (pathname === '/api/amp-usage') {
+    try {
+      const result = await getUsage();
+      return jsonResponse(res, result);
+    } catch (err) {
+      return sendError(res, 500, (err as Error).message);
+    }
+  }
+
+  if (pathname === '/api/amp-version') {
+    try {
+      const result = await getAmpVersion();
       return jsonResponse(res, result);
     } catch (err) {
       return sendError(res, 500, (err as Error).message);

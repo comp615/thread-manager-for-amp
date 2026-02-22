@@ -58,6 +58,9 @@ export interface UseCommandsOptions {
   onCodeReview?: () => void;
   onOpenPromptHistory?: () => void;
   onUndoLastTurn?: () => void;
+  onSetVisibility?: (id: string) => void;
+  onShowUsage?: () => void;
+  onCheckForUpdates?: () => void;
 }
 
 export interface CommandFactoryContext {

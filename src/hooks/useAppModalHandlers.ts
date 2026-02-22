@@ -301,6 +301,9 @@ export function useAppModalHandlers({
     onCodeReview: modalActions.handleCodeReview,
     onOpenPromptHistory: () => modals.setPromptHistoryOpen(true),
     onUndoLastTurn: handleUndoLastTurn,
+    onSetVisibility: modalActions.handleSetVisibility,
+    onShowUsage: modalActions.handleShowUsage,
+    onCheckForUpdates: modalActions.handleCheckForUpdates,
   });
 
   return {

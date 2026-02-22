@@ -122,3 +122,21 @@ export async function getAmpHelp(): Promise<SkillOutput> {
   const stdout = await runAmp(['--help']);
   return { output: stripAnsi(stdout) };
 }
+
+export async function getUsage(): Promise<SkillOutput> {
+  const stdout = await runAmp(['usage']);
+  return { output: stripAnsi(stdout) };
+}
+
+export async function getAmpVersion(): Promise<SkillOutput> {
+  const stdout = await runAmp(['--version']);
+  return { output: stripAnsi(stdout) };
+}
+
+export async function setThreadVisibility(
+  threadId: string,
+  visibility: string,
+): Promise<SkillMutationResult> {
+  const stdout = await runAmp(['threads', 'set-visibility', threadId, visibility]);
+  return { output: stripAnsi(stdout), success: true };
+}

@@ -20,6 +20,9 @@ export interface UseModalActionsReturn {
   handleImportTasks: () => void;
   handleReplayThread: (id: string) => void;
   handleCodeReview: () => void;
+  handleSetVisibility: (id: string) => void;
+  handleShowUsage: () => Promise<void>;
+  handleCheckForUpdates: () => Promise<void>;
 }
 
 export function useModalActions(
@@ -212,6 +215,58 @@ export function useModalActions(
     modals.setCodeReviewModal({});
   }, [modals]);
 
+  const handleSetVisibility = useCallback(
+    (id: string) => {
+      modals.setInputModal({
+        title: 'Set Thread Visibility',
+        label: 'Visibility level',
+        placeholder: 'Private, Unlisted, Workspace, Group, or Public',
+        confirmText: 'Set',
+        validate: (value: string) => {
+          const valid = ['private', 'unlisted', 'workspace', 'group', 'public'];
+          if (!valid.includes(value.trim().toLowerCase())) {
+            return `Must be one of: ${valid.join(', ')}`;
+          }
+          return null;
+        },
+        onConfirm: async (value: string) => {
+          modals.setInputModal(null);
+          try {
+            const result = await apiPost<{ output: string; success: boolean }>(
+              '/api/thread-set-visibility',
+              { threadId: id, visibility: value.trim() },
+            );
+            modals.setOutputModal({ title: 'Visibility Updated', content: result.output });
+          } catch (err) {
+            console.error('Failed to set visibility:', err);
+            showError(`Failed to set visibility: ${String(err)}`);
+          }
+        },
+      });
+    },
+    [modals, showError],
+  );
+
+  const handleShowUsage = useCallback(async () => {
+    try {
+      const result = await apiGet<{ output: string }>('/api/amp-usage');
+      modals.setOutputModal({ title: 'Amp Usage', content: result.output });
+    } catch (err) {
+      console.error('Failed to get usage:', err);
+      showError('Failed to get usage info');
+    }
+  }, [modals, showError]);
+
+  const handleCheckForUpdates = useCallback(async () => {
+    try {
+      const result = await apiGet<{ output: string }>('/api/amp-version');
+      modals.setOutputModal({ title: 'Amp Version', content: result.output });
+    } catch (err) {
+      console.error('Failed to check version:', err);
+      showError('Failed to check for updates');
+    }
+  }, [modals, showError]);
+
   return {
     handleShareThread,
     handleShowSkills,
@@ -230,5 +285,8 @@ export function useModalActions(
     handleImportTasks,
     handleReplayThread,
     handleCodeReview,
+    handleSetVisibility,
+    handleShowUsage,
+    handleCheckForUpdates,
   };
 }

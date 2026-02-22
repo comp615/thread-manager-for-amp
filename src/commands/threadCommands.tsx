@@ -17,6 +17,7 @@ import {
   ArrowRight,
   Search,
   Play,
+  Eye,
 } from 'lucide-react';
 import { CATEGORIES } from './categories';
 import type { Command, CommandFactoryContext, CommandHandlers } from './types';
@@ -66,6 +67,14 @@ export function createThreadCommands(
       label: 'share',
       icon: <Share2 size={14} />,
       action: () => activeThreadId && handlers.onShareThread?.(activeThreadId),
+      disabled: !hasActiveThread,
+    },
+    {
+      id: 'thread-set-visibility',
+      category: CATEGORIES.THREAD,
+      label: 'set visibility',
+      icon: <Eye size={14} />,
+      action: () => activeThreadId && handlers.onSetVisibility?.(activeThreadId),
       disabled: !hasActiveThread,
     },
     {

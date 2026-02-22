@@ -19,6 +19,7 @@ import {
   listWorkspaceFiles,
 } from '../lib/threads.js';
 import { truncateThreadAtMessage, undoLastTurn } from '../lib/threadCrud.js';
+import { setThreadVisibility } from '../lib/skills.js';
 import { getPromptHistory, addPromptToHistory } from '../lib/promptHistory.js';
 
 export async function handleThreadRoutes(
@@ -301,6 +302,23 @@ export async function handleThreadRoutes(
     } catch (err) {
       const status = (err as Error).message.includes('required') ? 400 : 500;
       return sendError(res, status, (err as Error).message);
+    }
+  }
+
+  if (pathname === '/api/thread-set-visibility') {
+    if (req.method !== 'POST') {
+      return sendError(res, 405, 'Method not allowed');
+    }
+    try {
+      const body = await parseBody<{ threadId?: string; visibility?: string }>(req);
+      if (!body.threadId) throw new Error('threadId required');
+      if (!body.visibility) throw new Error('visibility required');
+      const result = await setThreadVisibility(body.threadId, body.visibility);
+      return jsonResponse(res, result);
+    } catch (err) {
+      const msg = (err as Error).message;
+      const status = msg.includes('required') ? 400 : 500;
+      return sendError(res, status, msg);
     }
   }
 
