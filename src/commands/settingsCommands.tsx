@@ -1,4 +1,4 @@
-import { Shield, Settings, Volume2, VolumeX, Zap, Rocket, Brain } from 'lucide-react';
+import { Shield, Settings, Volume2, VolumeX, Zap, Rocket, Brain, FlaskConical } from 'lucide-react';
 import { CATEGORIES } from './categories';
 import type { Command, CommandFactoryContext, CommandHandlers } from './types';
 
@@ -40,6 +40,13 @@ export function createSettingsCommands(
       label: 'open in editor (workspace)',
       icon: <Shield size={14} />,
       action: () => handlers.onOpenPermissionsWorkspace?.(),
+    },
+    {
+      id: 'permissions-test',
+      category: CATEGORIES.PERMISSIONS,
+      label: 'test',
+      icon: <FlaskConical size={14} />,
+      action: () => handlers.onPermissionsTest?.(),
     },
     {
       id: 'settings-open',

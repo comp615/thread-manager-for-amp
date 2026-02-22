@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Import,
   FileSearch,
+  CheckCircle,
 } from 'lucide-react';
 import { CATEGORIES } from './categories';
 import type { Command, CommandFactoryContext, CommandHandlers } from './types';
@@ -70,6 +71,20 @@ export function createToolsCommands(
       label: 'list servers',
       icon: <List size={14} />,
       action: () => handlers.onShowMcpList?.(),
+    },
+    {
+      id: 'mcp-add',
+      category: CATEGORIES.MCP,
+      label: 'add server',
+      icon: <Plus size={14} />,
+      action: () => handlers.onMcpAdd?.(),
+    },
+    {
+      id: 'mcp-approve',
+      category: CATEGORIES.MCP,
+      label: 'approve server',
+      icon: <CheckCircle size={14} />,
+      action: () => handlers.onMcpApprove?.(),
     },
     {
       id: 'toolbox-list',

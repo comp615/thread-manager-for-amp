@@ -49,6 +49,9 @@ export interface UseCommandsOptions {
   onSkillAdd?: () => void;
   onSkillRemove?: () => void;
   onSkillInvoke?: () => void;
+  onMcpAdd?: () => void;
+  onMcpApprove?: () => void;
+  onPermissionsTest?: () => void;
   onManageBlockers?: (id: string) => void;
   onToggleSidebar?: () => void;
   onOpenShellTerminal?: () => void;
