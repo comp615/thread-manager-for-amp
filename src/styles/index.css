@@ -26,5 +26,6 @@
 @import './tasks-modal.css';
 @import './code-review-modal.css';
 @import './replay-controls.css';
+@import './thread-map.css';
 
 @import './responsive.css';

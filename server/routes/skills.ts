@@ -12,6 +12,7 @@ import {
   listPermissions,
   getSettingsPath,
   getAmpHelp,
+  getCustomThemes,
 } from '../lib/skills.js';
 
 interface SkillAddBody {
@@ -141,6 +142,15 @@ export async function handleSkillRoutes(
     try {
       const result = await getAmpHelp();
       return jsonResponse(res, result);
+    } catch (err) {
+      return sendError(res, 500, (err as Error).message);
+    }
+  }
+
+  if (pathname === '/api/custom-themes') {
+    try {
+      const themes = await getCustomThemes();
+      return jsonResponse(res, themes);
     } catch (err) {
       return sendError(res, 500, (err as Error).message);
     }

@@ -1,3 +1,5 @@
+import { readdir, readFile } from 'fs/promises';
+import { homedir } from 'os';
 import { join } from 'path';
 import { AMP_HOME } from './constants.js';
 import { runAmp, stripAnsi } from './utils.js';
@@ -121,4 +123,48 @@ export function getSettingsPath(): string {
 export async function getAmpHelp(): Promise<SkillOutput> {
   const stdout = await runAmp(['--help']);
   return { output: stripAnsi(stdout) };
+}
+
+export interface CustomTheme {
+  name: string;
+  bg: string;
+  fg: string;
+  accent: string;
+}
+
+export async function getCustomThemes(): Promise<CustomTheme[]> {
+  const themesDir = join(homedir(), '.config', 'amp', 'themes');
+  let entries: string[];
+  try {
+    entries = await readdir(themesDir);
+  } catch {
+    return [];
+  }
+
+  const themes: CustomTheme[] = [];
+  for (const entry of entries) {
+    const colorsPath = join(themesDir, entry, 'colors.toml');
+    try {
+      const content = await readFile(colorsPath, 'utf-8');
+      const theme = parseColorsToml(content, entry);
+      if (theme) themes.push(theme);
+    } catch {
+      // Skip directories without colors.toml
+    }
+  }
+  return themes;
+}
+
+function parseColorsToml(content: string, name: string): CustomTheme | null {
+  const get = (key: string): string | undefined => {
+    const m = content.match(new RegExp(`^${key}\\s*=\\s*"([^"]+)"`, 'm'));
+    return m?.[1];
+  };
+
+  const bg = get('background') || get('bg');
+  const fg = get('foreground') || get('fg');
+  const accent = get('accent') || get('primary');
+
+  if (!bg || !fg || !accent) return null;
+  return { name, bg, fg, accent };
 }
