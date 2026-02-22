@@ -67,6 +67,29 @@ describe('isWsClientMessage', () => {
     expect(isWsClientMessage({ type: 'message', content: 'hello', mode: 123 })).toBe(false);
     expect(isWsClientMessage({ type: 'message', content: 'hello', mode: '' })).toBe(false);
   });
+
+  it('accepts a valid shell_exec message', () => {
+    expect(isWsClientMessage({ type: 'shell_exec', command: 'ls -la', incognito: false })).toBe(
+      true,
+    );
+    expect(isWsClientMessage({ type: 'shell_exec', command: 'pwd', incognito: true })).toBe(true);
+  });
+
+  it('rejects shell_exec with missing command', () => {
+    expect(isWsClientMessage({ type: 'shell_exec', incognito: false })).toBe(false);
+  });
+
+  it('rejects shell_exec with non-string command', () => {
+    expect(isWsClientMessage({ type: 'shell_exec', command: 123, incognito: false })).toBe(false);
+  });
+
+  it('rejects shell_exec with missing incognito', () => {
+    expect(isWsClientMessage({ type: 'shell_exec', command: 'ls' })).toBe(false);
+  });
+
+  it('rejects shell_exec with non-boolean incognito', () => {
+    expect(isWsClientMessage({ type: 'shell_exec', command: 'ls', incognito: 'yes' })).toBe(false);
+  });
 });
 
 describe('isShellClientMessage', () => {

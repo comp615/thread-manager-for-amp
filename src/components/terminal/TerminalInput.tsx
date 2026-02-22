@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { Send, Loader2 } from 'lucide-react';
+import { apiPost } from '../../api/client';
 import type { TerminalInputProps } from './types';
 import { useMentionAutocomplete } from '../../hooks/useMentionAutocomplete';
 import { MentionAutocomplete, type MentionAutocompleteHandle } from './MentionAutocomplete';
@@ -106,6 +107,16 @@ export function TerminalInput({
     if (e.metaKey && e.key === 'Backspace') {
       e.preventDefault();
       onInputChange('');
+      return;
+    }
+    // Ctrl+G: open prompt in $EDITOR
+    if (e.ctrlKey && !e.metaKey && e.key === 'g') {
+      e.preventDefault();
+      apiPost<{ content: string }>('/api/open-editor-prompt', { content: input })
+        .then((result) => {
+          onInputChange(result.content);
+        })
+        .catch((err: unknown) => console.error('Failed to open editor:', err));
       return;
     }
     if (e.ctrlKey && e.key === 'v') {

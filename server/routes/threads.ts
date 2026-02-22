@@ -1,3 +1,7 @@
+import { spawn } from 'child_process';
+import { writeFile, readFile, unlink } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import type { IncomingMessage, ServerResponse } from 'http';
 import { jsonResponse, sendError, getParam, parseBody } from '../lib/utils.js';
 import {
@@ -301,6 +305,43 @@ export async function handleThreadRoutes(
     } catch (err) {
       const status = (err as Error).message.includes('required') ? 400 : 500;
       return sendError(res, status, (err as Error).message);
+    }
+  }
+
+  if (pathname === '/api/open-editor-prompt') {
+    if (req.method !== 'POST') {
+      return sendError(res, 405, 'Method not allowed');
+    }
+    try {
+      const body = await parseBody<{ content?: string }>(req);
+      const editor = process.env.VISUAL || process.env.EDITOR || 'vi';
+      const tmpFile = join(tmpdir(), `amp-prompt-${Date.now()}.md`);
+      await writeFile(tmpFile, body.content || '', 'utf-8');
+
+      const edited = await new Promise<string>((resolve, reject) => {
+        const child = spawn(editor, [tmpFile], {
+          stdio: 'inherit',
+          env: { ...process.env },
+        });
+        child.on('error', (err) => reject(new Error(`Failed to open editor: ${err.message}`)));
+        child.on('close', async (code) => {
+          if (code !== 0) {
+            reject(new Error(`Editor exited with code ${code}`));
+            return;
+          }
+          try {
+            const result = await readFile(tmpFile, 'utf-8');
+            await unlink(tmpFile).catch(() => {});
+            resolve(result);
+          } catch (err) {
+            reject(err instanceof Error ? err : new Error(String(err)));
+          }
+        });
+      });
+
+      return jsonResponse(res, { content: edited });
+    } catch (err) {
+      return sendError(res, 500, (err as Error).message);
     }
   }
 
