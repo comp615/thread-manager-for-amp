@@ -1,11 +1,16 @@
-import type { ServerResponse } from 'http';
-import { jsonResponse, sendError, getParam } from '../lib/utils.js';
-import { getWorkspaceGitStatus, getWorkspaceGitStatusDirect, getFileDiff } from '../lib/git.js';
+import type { IncomingMessage, ServerResponse } from 'http';
+import { jsonResponse, sendError, getParam, parseBody } from '../lib/utils.js';
+import {
+  getWorkspaceGitStatus,
+  getWorkspaceGitStatusDirect,
+  getFileDiff,
+  revertFile,
+} from '../lib/git.js';
 import { getThreadGitActivity } from '../lib/git-activity.js';
 
 export async function handleGitRoutes(
   url: URL,
-  _req: unknown,
+  req: IncomingMessage,
   res: ServerResponse,
 ): Promise<boolean> {
   const pathname = url.pathname;
@@ -56,6 +61,30 @@ export async function handleGitRoutes(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       const status = message.includes('required') ? 400 : 500;
+      return sendError(res, status, message);
+    }
+  }
+
+  if (pathname === '/api/git-revert-file') {
+    if (req.method !== 'POST') {
+      return sendError(res, 405, 'Method not allowed');
+    }
+    try {
+      const body = await parseBody<{
+        workspacePath?: string;
+        filePath?: string;
+        created?: boolean;
+      }>(req);
+      if (!body.workspacePath) throw new Error('workspacePath required');
+      if (!body.filePath) throw new Error('filePath required');
+      const result = await revertFile(body.workspacePath, body.filePath, !!body.created);
+      if (!result.success) {
+        return sendError(res, 500, result.error || 'Failed to revert file');
+      }
+      return jsonResponse(res, { success: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const status = message.includes('required') || message.includes('Invalid') ? 400 : 500;
       return sendError(res, status, message);
     }
   }

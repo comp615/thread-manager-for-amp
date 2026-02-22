@@ -39,10 +39,13 @@ export function TerminalInput({
   onCycleMode,
   isModeLocked,
   hasQueuedMessage,
+  userMessageHistory = [],
 }: TerminalInputProps) {
   void _onCancel;
   const autocompleteRef = useRef<MentionAutocompleteHandle>(null);
   const [cursorPosition, setCursorPosition] = useState(0);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const savedInputRef = useRef('');
   const { mentionState, closeMention, selectMention } = useMentionAutocomplete(
     input,
     cursorPosition,
@@ -82,8 +85,37 @@ export function TerminalInput({
       if (handled) return;
     }
 
+    // Arrow key history navigation
+    if (e.key === 'ArrowUp' && !e.shiftKey && userMessageHistory.length > 0) {
+      const atStart = input.trim() === '' || historyIndex >= 0;
+      if (atStart) {
+        e.preventDefault();
+        if (historyIndex === -1) {
+          savedInputRef.current = input;
+        }
+        const newIndex = Math.min(historyIndex + 1, userMessageHistory.length - 1);
+        if (newIndex !== historyIndex) {
+          setHistoryIndex(newIndex);
+          onInputChange(userMessageHistory[userMessageHistory.length - 1 - newIndex]);
+        }
+        return;
+      }
+    }
+    if (e.key === 'ArrowDown' && !e.shiftKey && historyIndex >= 0) {
+      e.preventDefault();
+      const newIndex = historyIndex - 1;
+      if (newIndex < 0) {
+        setHistoryIndex(-1);
+        onInputChange(savedInputRef.current);
+      } else {
+        setHistoryIndex(newIndex);
+        onInputChange(userMessageHistory[userMessageHistory.length - 1 - newIndex]);
+      }
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      setHistoryIndex(-1);
       // Allow force-send of queued message even with empty input
       if (hasQueuedMessage || input.trim() || pendingImage) {
         onSend();
@@ -178,6 +210,7 @@ export function TerminalInput({
         value={input}
         onChange={(e) => {
           onInputChange(e.target.value);
+          setHistoryIndex(-1);
           trackCursor();
         }}
         onKeyDown={handleKeyDown}
