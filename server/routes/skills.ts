@@ -12,6 +12,7 @@ import {
   listPermissions,
   getSettingsPath,
   getAmpHelp,
+  listAgentsMd,
 } from '../lib/skills.js';
 
 interface SkillAddBody {
@@ -140,6 +141,15 @@ export async function handleSkillRoutes(
   if (pathname === '/api/amp-help') {
     try {
       const result = await getAmpHelp();
+      return jsonResponse(res, result);
+    } catch (err) {
+      return sendError(res, 500, (err as Error).message);
+    }
+  }
+
+  if (pathname === '/api/agents-md-list') {
+    try {
+      const result = await listAgentsMd();
       return jsonResponse(res, result);
     } catch (err) {
       return sendError(res, 500, (err as Error).message);

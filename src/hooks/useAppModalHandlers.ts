@@ -301,6 +301,7 @@ export function useAppModalHandlers({
     onCodeReview: modalActions.handleCodeReview,
     onOpenPromptHistory: () => modals.setPromptHistoryOpen(true),
     onUndoLastTurn: handleUndoLastTurn,
+    onShowAgentsMdList: modalActions.handleShowAgentsMdList,
   });
 
   return {
