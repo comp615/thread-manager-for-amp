@@ -32,18 +32,19 @@ export async function getThreadChain(threadId: string): Promise<ThreadChain> {
   // Walk up to collect ancestors (linear path to root)
   const ancestors: ChainThread[] = [];
   const visited = new Set<string>([threadId]);
-  let currentId = threadId;
+  let walkId = threadId;
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard
   while (true) {
-    const thread = threadMap.get(currentId);
+    const thread = threadMap.get(walkId);
     const parentId = thread?.handoffParentId;
     if (!parentId || visited.has(parentId)) break;
     const parentThread = threadMap.get(parentId);
     if (!parentThread) break;
     visited.add(parentId);
     ancestors.unshift(toChainThread(parentThread));
-    currentId = parentId;
+    walkId = parentId;
   }
+  const rootId = walkId;
 
   // Build descendants tree (recursive, supports forks)
   function buildDescendantNode(id: string): ThreadChainNode | null {
@@ -72,7 +73,23 @@ export async function getThreadChain(threadId: string): Promise<ThreadChain> {
   const currentThread = threadMap.get(threadId);
   const current: ChainThread | null = currentThread ? toChainThread(currentThread) : null;
 
-  return { ancestors, current, descendantsTree };
+  // Build full tree from root (fresh visited set to avoid pruning siblings)
+  function buildFullTree(id: string, treeVisited: Set<string>): ThreadChainNode | null {
+    const t = threadMap.get(id);
+    if (!t || treeVisited.has(id)) return null;
+    treeVisited.add(id);
+    const childIds = parentToChildren.get(id) || [];
+    const children: ThreadChainNode[] = [];
+    for (const childId of childIds) {
+      const node = buildFullTree(childId, treeVisited);
+      if (node) children.push(node);
+    }
+    return { thread: toChainThread(t), children };
+  }
+
+  const root = buildFullTree(rootId, new Set<string>());
+
+  return { ancestors, current, descendantsTree, root, currentId: threadId };
 }
 
 interface HandoffResult {
